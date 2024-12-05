@@ -23,14 +23,14 @@
 
     <!-- Upload CSV/XLSX Section -->
     <div id="setup-section" class="card">
-      <h2>Step 1: Upload File (CSV or XLSX)</h2>
+      <h2>Upload File (CSV or XLSX)</h2>
       <input type="file" id="fileInput" accept=".csv, .xlsx" />
       <button id="uploadButton" class="btn btn-orange">Upload File</button>
     </div>
 
     <!-- Barcode Input Section -->
     <div id="barcode-section" class="card" style="display: none;">
-      <h2>Step 2: Scan or Enter Barcode</h2>
+      <h2>Scan or Enter Barcode</h2>
       <input type="text" id="barcodeInput" placeholder="Scan or Enter Barcode" />
       <button id="checkButton" class="btn btn-green">Check Price</button>
 
@@ -74,6 +74,8 @@
         <input type="password" id="newAuthCode" placeholder="Enter New Code" />
         <button id="changeAuthSubmit" class="btn btn-green">Submit</button>
         <button id="changeAuthCancel" class="btn btn-orange">Cancel</button>
+        <button id="resetDefaultButton" class="btn btn-red">Reset to Default</button>
+
       </div>
     </div>
   </div>
