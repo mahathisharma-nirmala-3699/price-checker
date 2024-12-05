@@ -1,299 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Price Checker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <script src="script.js?v=1.0" defer></script>
+  <script src="db.js"></script>
+  <script src="ui.js"></script>
+  <script src="filehandler.js"></script>
 
-// let db; // SQLite database instance
-const DEFAULT_AUTH_CODE = "12345"; // Default initial authorization code
+</head>
+<body>
+  <div class="container">
+    <!-- Centered Logo -->
+    <img src="ng.png" alt="Logo" class="logo" />
 
+    <!-- Title -->
+    <h1>Price Checker</h1>
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await initDB(); // Initialize SQLite database
+    <!-- Upload CSV/XLSX Section -->
+    <div id="setup-section" class="card">
+      <h2>Upload File (CSV or XLSX)</h2>
+      <input type="file" id="fileInput" accept=".csv, .xlsx" />
+      <button id="uploadButton" class="btn btn-orange">Upload File</button>
+    </div>
 
-  // Check if there are products in the database
-  const productCount = getProductCount();
-  if (productCount > 0) {
-    // If products exist, skip to the barcode scanner screen
-    document.getElementById("setup-section").style.display = "none";
-    document.getElementById("barcode-section").style.display = "block";
-    const barcodeInput = document.getElementById("barcodeInput");
-    if (barcodeInput) {
-        barcodeInput.focus();
-    } else {
-        console.error("Barcode input field not found.");
-    }
-  } else {
-    // If no products, show the file upload screen
-    document.getElementById("setup-section").style.display = "block";
-    document.getElementById("barcode-section").style.display = "none";
-  }
+    <!-- Barcode Input Section -->
+    <div id="barcode-section" class="card" style="display: none;">
+      <h2>Scan or Enter Barcode</h2>
+      <input type="text" id="barcodeInput" placeholder="Scan or Enter Barcode" />
+      <button id="checkButton" class="btn btn-green">Check Price</button>
 
-  // Initialize auth code in localStorage if not set
-  if (!localStorage.getItem("authCode")) {
-    localStorage.setItem("authCode", DEFAULT_AUTH_CODE);
-    console.log("Authorization code initialized to default.");
-  }
+      <!-- Menu Toggle Icon -->
+      <div id="menuToggle" class="menu-icon">☰</div>
+      <div id="menuOptions" class="menu-options" style="display: none;">
+        <button id="reuploadButton" class="btn btn-orange">Re-upload File</button>
+        <button id="changeAuthButton" class="btn btn-orange">Change Code</button>
+      </div>
+    </div>
 
-  // Initialize fileUploaded flag in localStorage if not set
-  if (!localStorage.getItem("fileUploaded")) {
-    localStorage.setItem("fileUploaded", "false");
-    console.log("fileUploaded flag initialized to false.");
-  }
+    <!-- Popup Modal for Authorization -->
+    <div id="authModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>Enter Authorization Code</h3>
+        <input type="password" id="authCodeInput" placeholder="Enter Code" />
+        <button id="authSubmit" class="btn btn-green">Submit</button>
+        <button id="authCancel" class="btn btn-orange">Cancel</button>
+      </div>
+    </div>
 
-  // Check the fileUploaded flag and show the appropriate section
-  if (localStorage.getItem("fileUploaded") === "true") {
-    document.getElementById("setup-section").style.display = "none";
-    document.getElementById("barcode-section").style.display = "block";
-  } else {
-    document.getElementById("setup-section").style.display = "block";
-    document.getElementById("barcode-section").style.display = "none";
-  }
-  
- 
-
-  // Attach event listener to closePopup button
-  const closePopupButton = document.getElementById("closePopup");
-  if (closePopupButton) {
-    closePopupButton.addEventListener("click", () => {
-      const popup = document.getElementById("popup");
-      if (popup) {
-        popup.style.display = "none"; // Close the popup
-        const barcodeInput = document.getElementById("barcodeInput");
-            if (barcodeInput) {
-                barcodeInput.focus();
-            } else {
-                console.error("Barcode input field not found.");
-            }
-      } else {
-        console.error("Popup element not found.");
-      }
-    });
-  } else {
-    console.error("closePopup button not found in the DOM.");
-  }
-  // document.getElementById("changeAuthSubmit").addEventListener("click", () => {
-  //   const oldCode = document.getElementById("oldAuthCode").value.trim();
-  //   const newCode = document.getElementById("newAuthCode").value.trim();
-  //   const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
-
-  //   if (oldCode !== currentCode) {
-  //     showPopup("error","Current authorization code is incorrect."); // Display error if old code doesn't match
-  //     return;
-  //   }
-
-  //   if (!newCode) {
-  //     showPopup("error","New authorization code cannot be empty."); // Ensure new code is not empty
-  //     return;
-  //   }
-
-  //   localStorage.setItem("authCode", newCode); // Update the authorization code in localStorage
-  //   showPopup("success","Authorization code updated successfully!");
-  //   hideChangeAuthModal(); // Hide the modal after successful change
-  // });
-
-  // document.getElementById("changeAuthCancel").addEventListener("click", () => {
-  //   hideChangeAuthModal();
-  // });
-  document.getElementById("changeAuthCancel").addEventListener("click", (event) => {
-    event.stopPropagation(); // Prevent the event from propagating to the document
-    hideChangeAuthModal(); // Close the Change Code popup
-  });
-
-  document.getElementById("resetDefaultButton").addEventListener("click", () => {
-    const confirmation = confirm("Are you sure you want to reset the authorization code to the default value?");
-    if (confirmation) {
-        localStorage.setItem("authCode", "12345"); // Reset the code to default
-        alert("Authorization code has been reset to the default value");
-        hideChangeAuthModal(); // Close the modal
-    }
-});
-
-  document.getElementById("changeAuthSubmit").addEventListener("click", () => {
-    const oldCode = document.getElementById("oldAuthCode").value.trim();
-    const newCode = document.getElementById("newAuthCode").value.trim();
-    const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
-  
-    if (oldCode !== currentCode) {
-      hideChangeAuthModal(); // Hide the "Change Code" modal
-      showPopup("error", "Current authorization code is incorrect."); // Display error popup
-      return;
-    }
-  
-    if (!newCode) {
-      hideChangeAuthModal(); // Hide the "Change Code" modal
-      showPopup("error", "New authorization code cannot be empty."); // Display error popup
-      return;
-    }
-  
-    localStorage.setItem("authCode", newCode); // Update the authorization code in localStorage
-    hideChangeAuthModal(); // Hide the "Change Code" modal
-    showPopup("success", "Authorization code updated successfully!"); // Display success popup
-  });
-  
-
-  // File Upload Logic
-  document.getElementById("uploadButton").addEventListener("click", () => {
-    const fileInput = document.getElementById("fileInput");
-    const file = fileInput.files[0];
-
-    if (!file) {
-      showPopup("error","Please select a file to upload.");
-      return;
-    }
-
-    const fileType = file.name.split(".").pop().toLowerCase();
-    if (fileType === "csv") {
-      processCSV(file);
-    } else if (fileType === "xlsx") {
-      processXLSX(file);
-    } else {
-      showPopup("error","Invalid file type. Please upload a CSV or XLSX file.");
-    }
-  });
-
-  // // Barcode Check Logic
-  document.getElementById("checkButton").addEventListener("click", async () => {
-    const barcodeInput = document.getElementById("barcodeInput");
-    const barcode = barcodeInput.value.trim();
-  
-    if (!barcode) {
-      showPopup("error","Please enter a barcode.");
-      return;
-    }
-  
-    const product = getProductByBarcode(barcode);
-    // if (product) {
-    //   showPopup(`Product: ${product.name}\nPrice: $${product.price}`);
-    // } else {
-    //   showPopup("Product not found in the database.");
-    // }
-    if (product) {
-      showPopup("productInfo",product.name, product.price);
-    } else {
-      showPopup("productInfo",null, null);
-    }
-  
-    barcodeInput.value = ""; // Clear input
-  });
-  
-
-  // Re-upload File Button Logic
-  document.getElementById("reuploadButton").addEventListener("click", () => {
-    showAuthModal();
-  
-    // Clear the file input field when opening the re-upload file section
-    const fileInput = document.getElementById("fileInput");
-    if (fileInput) {
-      fileInput.value = ""; // Clear the file input field
-    } else {
-      console.error("File input field not found.");
-    }
-  });
-
-  document.getElementById("changeAuthButton").addEventListener("click", () => {
-    console.log("Change Code button clicked");
-    showChangeAuthModal();
-  });
-  
-
-  // Authorization Modal Logic for Re-upload
-  document.getElementById("authSubmit").addEventListener("click", () => {
-    const enteredCode = document.getElementById("authCodeInput").value.trim();
-    const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
-
-    if (enteredCode === currentCode) {
-        // Check if a file was uploaded; skip clearing if no file is found
-        if (localStorage.getItem("fileUploaded") === "true") {
-            clearTable(); // Clear SQLite table only if a file was uploaded
-        }
-
-        localStorage.setItem("fileUploaded", "false"); // Reset fileUploaded flag
-        hideAuthModal();
-
-        document.getElementById("setup-section").style.display = "block";
-        document.getElementById("barcode-section").style.display = "none";
-    } else {
-        showPopup("error","Invalid authorization code.");
-    }
-});
+    <!-- General Popup Modal -->
+<div id="popup" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div id="popupContent">
+      <p id="productName" style="margin: 0;"></p>
+      <p id="productPrice" style="margin: 0;"></p>
+    </div>
+    <button id="closePopup" class="btn btn-orange">OK</button>
+  </div>
+</div>
 
 
-  document.getElementById("authCancel").addEventListener("click", () => {
-    hideAuthModal();
-  });
+    <!-- Change Authorization Modal -->
+    <div id="changeAuthModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>Change Authorization Code</h3>
+        <label for="oldAuthCode">Current Code:</label>
+        <input type="password" id="oldAuthCode" placeholder="Enter Current Code" />
+        <label for="newAuthCode">New Code:</label>
+        <input type="password" id="newAuthCode" placeholder="Enter New Code" />
+        <button id="changeAuthSubmit" class="btn btn-green">Submit</button>
+        <button id="changeAuthCancel" class="btn btn-orange">Cancel</button>
+        <button id="resetDefaultButton" class="btn btn-red">Reset to Default</button>
 
-  // Menu Icon Toggle Logic
-  const menuToggle = document.getElementById("menuToggle");
-  const menuOptions = document.getElementById("menuOptions");
-  const barcodeInput = document.getElementById("barcodeInput");
-
-
-  if (menuToggle && menuOptions && barcodeInput) {
-    menuToggle.addEventListener("click", (event) => {
-      event.stopPropagation(); // Prevent click from propagating to the document
-      const isMenuVisible = menuOptions.style.display === "block";
-
-      // Toggle menu visibility
-      menuOptions.style.display = isMenuVisible ? "none" : "block";
-      // If the menu closes, shift focus back to the barcode input
-    if (isMenuVisible) {
-      console.log("Menu is closing. Shifting focus to barcode input.");
-      barcodeInput.focus();
-    }
-    });
-
-    // Close menu when clicking outside
-    // Close menu when clicking outside
-// document.addEventListener("click", (event) => {
-//   const menuToggle = document.getElementById("menuToggle");
-//   const menuOptions = document.getElementById("menuOptions");
-
-//   // Check if click happened outside the menu
-//   if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
-//     menuOptions.style.display = "none"; // Close the menu
-
-//     // Focus barcode input ONLY if no modals are open
-// const authModal = document.getElementById("authModal");
-// const changeAuthModal = document.getElementById("changeAuthModal");
-
-//     if (
-//       menuOptions.style.display === "none" &&
-//       (!authModal || authModal.style.display === "none") &&
-//       (!changeAuthModal || changeAuthModal.style.display === "none")
-//     ) {
-//       const barcodeInput = document.getElementById("barcodeInput");
-//       if (barcodeInput) {
-//         barcodeInput.focus();
-//       } else {
-//         console.error("Barcode input field not found.");
-//       }
-//     }
-//   }
-// });
-document.addEventListener("click", (event) => {
-  const menuToggle = document.getElementById("menuToggle");
-  const menuOptions = document.getElementById("menuOptions");
-  const authModal = document.getElementById("authModal");
-  const changeAuthModal = document.getElementById("changeAuthModal");
-
-  // Check if click happened outside the menu
-  if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
-    menuOptions.style.display = "none"; // Close the menu
-
-    // Focus barcode input ONLY if no modals are open
-    const barcodeInput = document.getElementById("barcodeInput");
-    if (
-      menuOptions.style.display === "none" &&
-      (!authModal || authModal.style.display === "none") &&
-      (!changeAuthModal || changeAuthModal.style.display === "none")
-    ) {
-      if (barcodeInput) {
-        barcodeInput.focus();
-      } else {
-        console.error("Barcode input field not found.");
-      }
-    }
-  }
-});
-
-  } else {
-    console.error("Menu toggle, options, or barcode input field not found.");
-  }
-
-});
+      </div>
+    </div>
+  </div>
+</body>
+</html>
