@@ -67,29 +67,65 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     console.error("closePopup button not found in the DOM.");
   }
+  // document.getElementById("changeAuthSubmit").addEventListener("click", () => {
+  //   const oldCode = document.getElementById("oldAuthCode").value.trim();
+  //   const newCode = document.getElementById("newAuthCode").value.trim();
+  //   const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
+
+  //   if (oldCode !== currentCode) {
+  //     showPopup("error","Current authorization code is incorrect."); // Display error if old code doesn't match
+  //     return;
+  //   }
+
+  //   if (!newCode) {
+  //     showPopup("error","New authorization code cannot be empty."); // Ensure new code is not empty
+  //     return;
+  //   }
+
+  //   localStorage.setItem("authCode", newCode); // Update the authorization code in localStorage
+  //   showPopup("success","Authorization code updated successfully!");
+  //   hideChangeAuthModal(); // Hide the modal after successful change
+  // });
+
+  // document.getElementById("changeAuthCancel").addEventListener("click", () => {
+  //   hideChangeAuthModal();
+  // });
+  document.getElementById("changeAuthCancel").addEventListener("click", (event) => {
+    event.stopPropagation(); // Prevent the event from propagating to the document
+    hideChangeAuthModal(); // Close the Change Code popup
+  });
+
+  document.getElementById("resetDefaultButton").addEventListener("click", () => {
+    const confirmation = confirm("Are you sure you want to reset the authorization code to the default value?");
+    if (confirmation) {
+        localStorage.setItem("authCode", "12345"); // Reset the code to default
+        alert("Authorization code has been reset to the default value");
+        hideChangeAuthModal(); // Close the modal
+    }
+});
+
   document.getElementById("changeAuthSubmit").addEventListener("click", () => {
     const oldCode = document.getElementById("oldAuthCode").value.trim();
     const newCode = document.getElementById("newAuthCode").value.trim();
     const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
-
+  
     if (oldCode !== currentCode) {
-      showPopup("Current authorization code is incorrect."); // Display error if old code doesn't match
+      hideChangeAuthModal(); // Hide the "Change Code" modal
+      showPopup("error", "Current authorization code is incorrect."); // Display error popup
       return;
     }
-
+  
     if (!newCode) {
-      showPopup("New authorization code cannot be empty."); // Ensure new code is not empty
+      hideChangeAuthModal(); // Hide the "Change Code" modal
+      showPopup("error", "New authorization code cannot be empty."); // Display error popup
       return;
     }
-
+  
     localStorage.setItem("authCode", newCode); // Update the authorization code in localStorage
-    showPopup("Authorization code updated successfully!");
-    hideChangeAuthModal(); // Hide the modal after successful change
+    hideChangeAuthModal(); // Hide the "Change Code" modal
+    showPopup("success", "Authorization code updated successfully!"); // Display success popup
   });
-
-  document.getElementById("changeAuthCancel").addEventListener("click", () => {
-    hideChangeAuthModal();
-  });
+  
 
   // File Upload Logic
   document.getElementById("uploadButton").addEventListener("click", () => {
@@ -97,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const file = fileInput.files[0];
 
     if (!file) {
-      showPopup("Please select a file to upload.");
+      showPopup("error","Please select a file to upload.");
       return;
     }
 
@@ -107,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (fileType === "xlsx") {
       processXLSX(file);
     } else {
-      showPopup("Invalid file type. Please upload a CSV or XLSX file.");
+      showPopup("error","Invalid file type. Please upload a CSV or XLSX file.");
     }
   });
 
@@ -117,7 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const barcode = barcodeInput.value.trim();
   
     if (!barcode) {
-      showPopup("Please enter a barcode.");
+      showPopup("error","Please enter a barcode.");
       return;
     }
   
@@ -128,9 +164,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     //   showPopup("Product not found in the database.");
     // }
     if (product) {
-      showPopup(product.name, product.price);
+      showPopup("productInfo",product.name, product.price);
     } else {
-      showPopup(null, null);
+      showPopup("productInfo",null, null);
     }
   
     barcodeInput.value = ""; // Clear input
@@ -140,6 +176,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Re-upload File Button Logic
   document.getElementById("reuploadButton").addEventListener("click", () => {
     showAuthModal();
+  
+    // Clear the file input field when opening the re-upload file section
+    const fileInput = document.getElementById("fileInput");
+    if (fileInput) {
+      fileInput.value = ""; // Clear the file input field
+    } else {
+      console.error("File input field not found.");
+    }
   });
 
   document.getElementById("changeAuthButton").addEventListener("click", () => {
@@ -165,7 +209,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("setup-section").style.display = "block";
         document.getElementById("barcode-section").style.display = "none";
     } else {
-        showPopup("Invalid authorization code.");
+        showPopup("error","Invalid authorization code.");
     }
 });
 
@@ -195,15 +239,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Close menu when clicking outside
-    document.addEventListener("click", (event) => {
-      if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
-        menuOptions.style.display = "none";
-  
-        // After closing the menu, set focus back to the barcode input
-        console.log("Menu closed by outside click. Shifting focus to barcode input.");
+    // Close menu when clicking outside
+// document.addEventListener("click", (event) => {
+//   const menuToggle = document.getElementById("menuToggle");
+//   const menuOptions = document.getElementById("menuOptions");
+
+//   // Check if click happened outside the menu
+//   if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
+//     menuOptions.style.display = "none"; // Close the menu
+
+//     // Focus barcode input ONLY if no modals are open
+// const authModal = document.getElementById("authModal");
+// const changeAuthModal = document.getElementById("changeAuthModal");
+
+//     if (
+//       menuOptions.style.display === "none" &&
+//       (!authModal || authModal.style.display === "none") &&
+//       (!changeAuthModal || changeAuthModal.style.display === "none")
+//     ) {
+//       const barcodeInput = document.getElementById("barcodeInput");
+//       if (barcodeInput) {
+//         barcodeInput.focus();
+//       } else {
+//         console.error("Barcode input field not found.");
+//       }
+//     }
+//   }
+// });
+document.addEventListener("click", (event) => {
+  const menuToggle = document.getElementById("menuToggle");
+  const menuOptions = document.getElementById("menuOptions");
+  const authModal = document.getElementById("authModal");
+  const changeAuthModal = document.getElementById("changeAuthModal");
+
+  // Check if click happened outside the menu
+  if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
+    menuOptions.style.display = "none"; // Close the menu
+
+    // Focus barcode input ONLY if no modals are open
+    const barcodeInput = document.getElementById("barcodeInput");
+    if (
+      menuOptions.style.display === "none" &&
+      (!authModal || authModal.style.display === "none") &&
+      (!changeAuthModal || changeAuthModal.style.display === "none")
+    ) {
+      if (barcodeInput) {
         barcodeInput.focus();
+      } else {
+        console.error("Barcode input field not found.");
       }
-    });
+    }
+  }
+});
+
   } else {
     console.error("Menu toggle, options, or barcode input field not found.");
   }
