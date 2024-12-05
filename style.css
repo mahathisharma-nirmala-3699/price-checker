@@ -1,4 +1,4 @@
-/* General Styling */
+General Styling
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -106,6 +106,61 @@ body {
   color: #333;
 }
 
+.modal-content button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: orange;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modal-content button:hover {
+  background-color: darkorange;
+}
+
+/* Specific Popup Styling */
+#fileUploadedPopup p {
+  font-size: 1.2rem;
+  color: #0b8457; /* Green for success */
+}
+
+#productPopup p {
+  margin: 5px 0;
+}
+
+#productPopup .product-name {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+}
+
+#productPopup .product-price {
+  font-size: 2em;
+  font-weight: bold;
+  color: green;
+}
+
+#incorrectAuthPopup p,
+#incorrectCurrentCodePopup p {
+  font-size: 1.2rem;
+  color: red;
+}
+
+#codeChangedPopup p {
+  font-size: 1.2rem;
+  color: #0b8457; /* Green for success */
+}
+
+input:focus {
+  outline: 2px solid #0b8457; /* Highlight focused input fields */
+  border-color: #0b8457;
+}
+
+
 
 /* Header Styling */
 h1 {
@@ -147,13 +202,78 @@ input[type="text"] {
   transition: all 0.3s ease;
 }
 
+
+
+/* Styling for Input Fields */
+.modal-content input[type="password"] {
+  display: block;
+  width: 90%;
+  max-width: 300px;
+  padding: 10px 15px;
+  margin: 10px auto;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modal-content input[type="password"]:focus {
+  border-color: #0b8457;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(11, 132, 87, 0.3);
+}
+
+/* Label Styling */
+.modal-content label {
+  display: block;
+  text-align: left;
+  margin: 10px auto 5px auto;
+  width: 90%;
+  max-width: 300px;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Button Alignment */
+.modal-content button {
+  display: block;
+  width: 90%;
+  max-width: 300px;
+  margin: 10px auto;
+  padding: 10px 15px;
+  font-size: 1rem;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
 .btn-green {
   background-color: #0b8457;
+}
+
+.btn-green:hover {
+  background-color: #097a45;
 }
 
 .btn-orange {
   background-color: #ff8c00;
 }
+
+.btn-orange:hover {
+  background-color: #e57c00;
+}
+
+.btn-red {
+  background-color: #e53935;
+}
+
+.btn-red:hover {
+  background-color: #d32f2f;
+}
+
 
 .menu-icon img {
   width: 30px;
@@ -181,5 +301,33 @@ input[type="text"] {
 @media (max-width: 480px) {
   .logo {
     width: 150px;
+  }
+}
+
+/* Responsive Design for Modals */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    max-width: 300px;
+    padding: 15px;
+  }
+
+  .modal-content p {
+    font-size: 0.9rem;
+  }
+
+  .modal-content button {
+    font-size: 0.9rem;
+    padding: 8px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    max-width: 280px;
+  }
+
+  .modal-content p {
+    font-size: 0.8rem;
   }
 }
