@@ -54,7 +54,7 @@ function processCSVContent(content) {
     //   }
 
     function afterFileUpload() {
-        showPopup("File uploaded successfully!");
+        showPopup("success","File uploaded successfully!");
         document.getElementById("setup-section").style.display = "none";
         document.getElementById("barcode-section").style.display = "block";
     
