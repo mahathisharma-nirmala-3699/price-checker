@@ -1,62 +1,13 @@
-// function showPopup(message) {
-//     const popup = document.getElementById("popup");
-//     const popupMessage = document.getElementById("popupMessage");
-//     popupMessage.textContent = message;
-//     popup.style.display = "flex";
-//   }
-
-// function showPopup(productName, productPrice) {
-//     const popup = document.getElementById("popup");
-//     const productNameElement = document.getElementById("productName");
-//     const productPriceElement = document.getElementById("productPrice");
-  
-//     if (popup && productNameElement && productPriceElement) {
-//       if (productName && productPrice) {
-//         // Case: Product found
-//         const formattedName = capitalize(productName); // Format product name
-//         productNameElement.textContent = `${formattedName}`;
-//         productPriceElement.textContent = `Price: $${productPrice}`;
-//         productPriceElement.style.color = "green"; // Optional: Set color to green for valid price
-//       } else {
-//         // Case: Product not found
-//         productNameElement.textContent = `Product not found`;
-//         productPriceElement.textContent = `Price: N/A`;
-//         productPriceElement.style.color = "red"; // Optional: Set color to red for "N/A"
-//       }
-//       popup.style.display = "flex"; // Show the popup
-//     } else {
-//       console.error("Popup or its child elements not found.");
-//     }
-//   }
-// function showPopup(productName, productPrice) {
-//     const popup = document.getElementById("popup");
-//     const productNameElement = document.getElementById("productName");
-//     const productPriceElement = document.getElementById("productPrice");
-  
-//     if (popup && productNameElement && productPriceElement) {
-//       if (productName && productPrice) {
-//         // Case: Product found
-//         const formattedName = capitalize(productName); // Format product name
-//         productNameElement.textContent = `${formattedName}`;
-//         productPriceElement.textContent = `Price: $${productPrice}`;
-//         productPriceElement.style.color = "green"; // Set color to green for valid price
-//       } else if (productName && !productPrice) {
-//         // Case: Product name available but no price
-//         const formattedName = capitalize(productName);
-//         productNameElement.textContent = `${formattedName}`;
-//         productPriceElement.textContent = `Price: N/A`;
-//         productPriceElement.style.color = "red"; // Set color to red for "N/A"
-//       } else {
-//         // Case: Product not found
-//         productNameElement.textContent = `Product not found`;
-//         productPriceElement.textContent = `Price: N/A`;
-//         productPriceElement.style.color = "red"; // Set color to red for "N/A"
-//       }
-//       popup.style.display = "flex"; // Show the popup
-//     } else {
-//       console.error("Popup or its child elements not found.");
-//     }
-//   }
+// Function to handle barcode input
+function handleBarcodeInput(barcode) {
+  console.log("Looking up barcode:", barcode);
+  const product = getProductByBarcode(barcode); // Replace with your DB logic
+  if (product) {
+    showPopup("productInfo", product.name, product.price);
+  } else {
+    showPopup("productInfo", null, null); // Show "Product not found"
+  }
+}
 
 function showPopup(type, productName = null, productPrice = null) {
     const popup = document.getElementById("popup");
