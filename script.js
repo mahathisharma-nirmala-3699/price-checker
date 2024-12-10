@@ -1,10 +1,22 @@
 
 // let db; // SQLite database instance
 const DEFAULT_AUTH_CODE = "12345"; // Default initial authorization code
+let barcodeInputTimeout = null; // Timeout variable for debounce mechanism
+let isManualInput = false;
+let lastInputTime = 0; // To differentiate between manual and scanned input
+const SCAN_THRESHOLD = 100; // Time in milliseconds for scan detection
+let isScanning = false; 
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+  const barcodeInput = document.getElementById("barcodeInput");
+  if (!barcodeInput) {
+    console.error("Barcode input field not found.");
+    return;
+  }
   await initDB(); // Initialize SQLite database
+ 
 
   // Check if there are products in the database
   const productCount = getProductCount();
@@ -12,7 +24,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // If products exist, skip to the barcode scanner screen
     document.getElementById("setup-section").style.display = "none";
     document.getElementById("barcode-section").style.display = "block";
-    const barcodeInput = document.getElementById("barcodeInput");
     if (barcodeInput) {
         barcodeInput.focus();
     } else {
@@ -45,8 +56,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("barcode-section").style.display = "none";
   }
   
- 
-
   // Attach event listener to closePopup button
   const closePopupButton = document.getElementById("closePopup");
   if (closePopupButton) {
@@ -54,7 +63,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const popup = document.getElementById("popup");
       if (popup) {
         popup.style.display = "none"; // Close the popup
-        const barcodeInput = document.getElementById("barcodeInput");
             if (barcodeInput) {
                 barcodeInput.focus();
             } else {
@@ -67,29 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     console.error("closePopup button not found in the DOM.");
   }
-  // document.getElementById("changeAuthSubmit").addEventListener("click", () => {
-  //   const oldCode = document.getElementById("oldAuthCode").value.trim();
-  //   const newCode = document.getElementById("newAuthCode").value.trim();
-  //   const currentCode = localStorage.getItem("authCode") || DEFAULT_AUTH_CODE;
 
-  //   if (oldCode !== currentCode) {
-  //     showPopup("error","Current authorization code is incorrect."); // Display error if old code doesn't match
-  //     return;
-  //   }
-
-  //   if (!newCode) {
-  //     showPopup("error","New authorization code cannot be empty."); // Ensure new code is not empty
-  //     return;
-  //   }
-
-  //   localStorage.setItem("authCode", newCode); // Update the authorization code in localStorage
-  //   showPopup("success","Authorization code updated successfully!");
-  //   hideChangeAuthModal(); // Hide the modal after successful change
-  // });
-
-  // document.getElementById("changeAuthCancel").addEventListener("click", () => {
-  //   hideChangeAuthModal();
-  // });
   document.getElementById("changeAuthCancel").addEventListener("click", (event) => {
     event.stopPropagation(); // Prevent the event from propagating to the document
     hideChangeAuthModal(); // Close the Change Code popup
@@ -125,7 +111,73 @@ document.addEventListener("DOMContentLoaded", async () => {
     hideChangeAuthModal(); // Hide the "Change Code" modal
     showPopup("success", "Authorization code updated successfully!"); // Display success popup
   });
-  
+
+
+// Event Listener: Keydown for manual input detection
+barcodeInput.addEventListener("keydown", () => {
+  isManualInput = true; // Mark as manual input
+  console.log("Manual input detected (keydown event).");
+});
+
+
+  // Event Listener: Input for detecting scanned input
+  barcodeInput.addEventListener("input", () => {
+    const currentTime = Date.now();
+    const timeDifference = currentTime - lastInputTime;
+
+    // Check if input is from a scanner (rapid input)
+    if (timeDifference < SCAN_THRESHOLD) {
+      isScanning = true; // It's a scanned input
+      isManualInput = false; // Override manual input flag
+      console.log("Scanned input detected.");
+    } else {
+      isScanning = false; // Not a scanned input
+    }
+
+    // Clear timeout to debounce further input
+    clearTimeout(barcodeInputTimeout);
+
+    // Process the input after a delay (for scanned input completion)
+    barcodeInputTimeout = setTimeout(() => {
+      const barcode = barcodeInput.value.trim();
+
+      if (isScanning && barcode) {
+        console.log("Processing scanned input:", barcode);
+        handleBarcodeInput(barcode); // Process scanned barcode
+        barcodeInput.value = ""; // Clear input field for next scan
+      }
+
+      isScanning = false; // Reset scanning flag
+    }, SCAN_THRESHOLD);
+
+    lastInputTime = currentTime; // Update the last input time
+  });
+
+  // Event Listener: Check Price button for manual input
+  document.getElementById("checkButton").addEventListener("click", () => {
+    const barcode = barcodeInput.value.trim();
+    if (barcode) {
+      console.log("Manual check triggered for barcode:", barcode);
+      handleBarcodeInput(barcode); // Process manual input
+    } else {
+      showPopup("error", "Please enter a valid barcode", null); // Show error for empty input
+    }
+    barcodeInput.value = ""; // Clear input field after checking
+    isManualInput = false; // Reset manual input flag
+  });
+
+// Reset manual input flag on blur
+barcodeInput.addEventListener("blur", () => {
+  isManualInput = false; // Reset manual input flag
+  console.log("Input field blurred. Resetting manual input flag.");
+});
+
+// Reset manual input flag on focus
+barcodeInput.addEventListener("focus", () => {
+  isManualInput = false; // Reset manual input flag
+  console.log("Input field focused. Resetting manual input flag.");
+});
+
 
   // File Upload Logic
   document.getElementById("uploadButton").addEventListener("click", () => {
@@ -147,31 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // // Barcode Check Logic
-  document.getElementById("checkButton").addEventListener("click", async () => {
-    const barcodeInput = document.getElementById("barcodeInput");
-    const barcode = barcodeInput.value.trim();
-  
-    if (!barcode) {
-      showPopup("error","Please enter a barcode.");
-      return;
-    }
-  
-    const product = getProductByBarcode(barcode);
-    // if (product) {
-    //   showPopup(`Product: ${product.name}\nPrice: $${product.price}`);
-    // } else {
-    //   showPopup("Product not found in the database.");
-    // }
-    if (product) {
-      showPopup("productInfo",product.name, product.price);
-    } else {
-      showPopup("productInfo",null, null);
-    }
-  
-    barcodeInput.value = ""; // Clear input
-  });
-  
+
 
   // Re-upload File Button Logic
   document.getElementById("reuploadButton").addEventListener("click", () => {
@@ -221,7 +249,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Menu Icon Toggle Logic
   const menuToggle = document.getElementById("menuToggle");
   const menuOptions = document.getElementById("menuOptions");
-  const barcodeInput = document.getElementById("barcodeInput");
 
 
   if (menuToggle && menuOptions && barcodeInput) {
@@ -238,34 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     });
 
-    // Close menu when clicking outside
-    // Close menu when clicking outside
-// document.addEventListener("click", (event) => {
-//   const menuToggle = document.getElementById("menuToggle");
-//   const menuOptions = document.getElementById("menuOptions");
 
-//   // Check if click happened outside the menu
-//   if (!menuOptions.contains(event.target) && event.target !== menuToggle) {
-//     menuOptions.style.display = "none"; // Close the menu
-
-//     // Focus barcode input ONLY if no modals are open
-// const authModal = document.getElementById("authModal");
-// const changeAuthModal = document.getElementById("changeAuthModal");
-
-//     if (
-//       menuOptions.style.display === "none" &&
-//       (!authModal || authModal.style.display === "none") &&
-//       (!changeAuthModal || changeAuthModal.style.display === "none")
-//     ) {
-//       const barcodeInput = document.getElementById("barcodeInput");
-//       if (barcodeInput) {
-//         barcodeInput.focus();
-//       } else {
-//         console.error("Barcode input field not found.");
-//       }
-//     }
-//   }
-// });
 document.addEventListener("click", (event) => {
   const menuToggle = document.getElementById("menuToggle");
   const menuOptions = document.getElementById("menuOptions");
@@ -277,7 +277,6 @@ document.addEventListener("click", (event) => {
     menuOptions.style.display = "none"; // Close the menu
 
     // Focus barcode input ONLY if no modals are open
-    const barcodeInput = document.getElementById("barcodeInput");
     if (
       menuOptions.style.display === "none" &&
       (!authModal || authModal.style.display === "none") &&
