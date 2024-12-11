@@ -467,7 +467,7 @@ input[type="text"] {
   #authModal,
   #changeAuthModal {
     width: 500px; /* Slightly larger popups for larger screens */
-    height: 550px;
+    height: 650px;
     font-size: 30px;
   }
 
