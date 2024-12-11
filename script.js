@@ -55,7 +55,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("setup-section").style.display = "block";
     document.getElementById("barcode-section").style.display = "none";
   }
-  
+  if (barcodeInput) {
+    barcodeInput.focus(); // Ensure the focus is set as the app loads
+    console.log("Barcode input field focused.");
+  } else {
+    console.error("Barcode input field not found.");
+  } 
   // Attach event listener to closePopup button
   const closePopupButton = document.getElementById("closePopup");
   if (closePopupButton) {
