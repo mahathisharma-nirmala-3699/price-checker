@@ -1,12 +1,58 @@
 // Function to handle barcode input
+// function handleBarcodeInput(barcode) {
+//   console.log("Looking up barcode:", barcode);
+//   // const product = getProductByBarcode(barcode); // Replace with your DB logic
+//   // if (product) {
+//   //   showPopup("productInfo", product.name, product.price);
+//   // } else {
+//   //   showPopup("productInfo", null, null); // Show "Product not found"
+//   // }
+//   const inputBarcode = barcode ? barcode.value.trim() : "";
+//   getProductByBarcode(inputBarcode).then((product) => {
+//     if (product) {
+//         console.log("Product found and returned:", product);
+//         // Update your UI or logic here with the found product
+//         showProductPopup(product.name, product.price); // Hypothetical function
+//     } else {
+//         console.warn("Product not found.");
+//         showProductPopup("Product not found", "N/A");
+//     }
+// }).catch((error) => {
+//     console.error("Error while fetching product:", error);
+//     showProductPopup("Error", "N/A");
+// });
+// }
+
 function handleBarcodeInput(barcode) {
-  console.log("Looking up barcode:", barcode);
-  const product = getProductByBarcode(barcode); // Replace with your DB logic
-  if (product) {
-    showPopup("productInfo", product.name, product.price);
-  } else {
-    showPopup("productInfo", null, null); // Show "Product not found"
+  if (!barcode) {
+      console.warn("No barcode input provided.");
+      showProductPopup("Product not found", "N/A"); // Display a message for missing input
+      return;
   }
+
+  const inputBarcode = typeof barcode === "string" ? barcode.trim() : barcode.value?.trim();
+  if (!inputBarcode) {
+      console.warn("Empty or invalid barcode.");
+      showPopup("Product not found", "N/A"); // Display a message for empty input
+      return;
+  }
+
+  console.log("Looking up barcode:", inputBarcode);
+
+  getProductByBarcode(inputBarcode)
+      .then((product) => {
+          if (product) {
+              console.log("Product found and returned:", product);
+              showPopup("productInfo",product.name, product.price); // Display product details
+          } else {
+              console.warn("Product not found.");
+              showPopup("productInfo", null, null);
+          }
+      })
+      .catch((error) => {
+          console.error("Error while fetching product:", error);
+          showPopup("Error", "N/A");
+      });
 }
 
 function showPopup(type, productName = null, productPrice = null) {
