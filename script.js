@@ -4,7 +4,7 @@ const DEFAULT_AUTH_CODE = "12345"; // Default initial authorization code
 let barcodeInputTimeout = null; // Timeout variable for debounce mechanism
 let isManualInput = false;
 let lastInputTime = 0; // To differentiate between manual and scanned input
-const SCAN_THRESHOLD = 150; // Time in milliseconds for scan detection
+const SCAN_THRESHOLD = 200; // Time in milliseconds for scan detection
 let isScanning = false; 
 
 
